@@ -109,6 +109,10 @@ function CLIconsole() {
          // Move the current X position.
            var offset = _DrawingContext.measureText(this.CurrentFont, this.CurrentFontSize, text);
            this.CurrentXPosition = this.CurrentXPosition + offset;
+		   if(this.CurrentXPosition > _CanvasWidth)
+			{
+				this.advanceLine();
+			}
 		   textMem.push(text);
        }
     };

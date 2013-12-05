@@ -22,6 +22,7 @@ function Cpu() {
         this.isExecuting = false;  
 		this.QuantumSeperation = _Quantum;
 		this.SeperationValidOpCode = 0;
+		this.isPriority = false;
     
     this.init = function() {
 		this.PC    = 0;     // Program Counter
@@ -53,6 +54,8 @@ function Cpu() {
 				{
 					this.Acc = parseInt(_Memory.memory[++this.PC + _PCB.base], 16);
 					document.getElementById('ACC').innerHTML=this.Acc;
+					_PCB.PCLoc = this.PC;
+					_PCB.ACCVal = this.Acc;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -62,6 +65,8 @@ function Cpu() {
 					var location = _Memory.memory[++this.PC + _PCB.base];
 					this.Acc = _Memory.memory[_PCB.checkLimit(_Memory.convert(location))];
 					document.getElementById('ACC').innerHTML=this.Acc;
+					_PCB.PCLoc = this.PC;
+					_PCB.ACCVal = this.Acc;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -71,6 +76,7 @@ function Cpu() {
 					var location = _Memory.memory[++this.PC + _PCB.base];
 					_Memory.memory[_PCB.checkLimit(_Memory.convert(location))] = this.Acc.toString(16);
 					document.getElementById(_PCB.checkLimit(_Memory.convert(location))).innerHTML=this.Acc.toString(16).toUpperCase();
+					_PCB.PCLoc = this.PC;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -80,6 +86,8 @@ function Cpu() {
 					var adder = _Memory.memory[++this.PC + _PCB.base];
 					this.Acc = this.Acc + parseInt(_Memory.memory[_PCB.checkLimit(_Memory.convert(adder))], 16);
 					document.getElementById("ACC").innerHTML=this.Acc;
+					_PCB.PCLoc = this.PC;
+					_PCB.ACCVal = this.Acc;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -88,6 +96,8 @@ function Cpu() {
 				{
 					this.Xreg = parseInt(_Memory.memory[++this.PC + _PCB.base],16);
 					document.getElementById("X").innerHTML=this.Xreg.toString(16);
+					_PCB.PCLoc = this.PC;
+					_PCB.XRegVal = this.Xreg;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -97,6 +107,8 @@ function Cpu() {
 					var location = _Memory.memory[++this.PC + _PCB.base];
 					this.Xreg = parseInt(_Memory.memory[_PCB.checkLimit(_Memory.convert(location))], 16);
 					document.getElementById("X").innerHTML=this.Xreg.toString(16);
+					_PCB.PCLoc = this.PC;
+					_PCB.XRegVal = this.Xreg;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -105,6 +117,8 @@ function Cpu() {
 				{
 					this.Yreg = parseInt(_Memory.memory[++this.PC + _PCB.base],16);
 					document.getElementById("Y").innerHTML=this.Yreg.toString(16);
+					_PCB.PCLoc = this.PC;
+					_PCB.YRegVal = this.Yreg;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -114,6 +128,8 @@ function Cpu() {
 					var location = _Memory.memory[++this.PC + _PCB.base];
 					this.Yreg = parseInt(_Memory.memory[_PCB.checkLimit(_Memory.convert(location))], 16);
 					document.getElementById("Y").innerHTML=this.Yreg.toString(16);
+					_PCB.PCLoc = this.PC;
+					_PCB.YRegVal = this.Yreg;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -130,28 +146,13 @@ function Cpu() {
 					{
 						if(_ReadyQueue.isEmpty())
 						{
-							_PCB.isDone = true;
-							_PCB.ACCVal = 0;
-							_PCB.XRegVal = 0;
-							_PCB.YRegVal = 0;
-							_PCB.ZFlagVal = 0;
-							this.Acc   = 0;
-							this.Xreg  = 0;
-							this.Yreg  = 0;
-							this.Zflag = 0;
+							_PCB.isDone = true;		
+							_Memory.init();							
 							this.isExecuting = false;
 						}
 						else
 						{
 							_PCB.isDone = true;
-							_PCB.ACCVal = 0;
-							_PCB.XRegVal = 0;
-							_PCB.YRegVal = 0;
-							_PCB.ZFlagVal = 0;
-							this.Acc   = 0;
-							this.Xreg  = 0;
-							this.Yreg  = 0;
-							this.Zflag = 0;
 							_KernelInterruptQueue.enqueue( new Interrupt(CONTEXTSWITCH_IRQ, 0) );
 						}
 					}
@@ -174,6 +175,7 @@ function Cpu() {
 						_PCB.ZFlagVal = 0;
 						document.getElementById("Z").innerHTML = this.Zflag;
 					}
+					_PCB.PCLoc = this.PC;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -189,6 +191,7 @@ function Cpu() {
 					else
 					{
 						this.PC++;
+						_PCB.PCLoc = this.PC;
 					}
 					this.SeperationValidOpCode = 0;
 					break;
@@ -201,6 +204,7 @@ function Cpu() {
 					incrementor++;
 					_Memory.memory[index] = incrementor.toString(16);
 					document.getElementById(index).innerHTML = incrementor.toString(16);
+					_PCB.PCLoc = this.PC;
 					this.SeperationValidOpCode = 0;
 					break;
 				}
@@ -218,7 +222,7 @@ function Cpu() {
 						_PCB.YRegVal = this.Yreg;
 						while(_Memory.memory[tempY] != "00")
 						{
-							_Console.putText(String.fromCharCode(parseInt(_Memory.memory[tempY], 16)));
+							_Console.putText(String.fromCharCode(parseInt(_Memory.memory[tempY+ _PCB.base], 16)));
 							tempY++;
 						}
 						_Console.putText(" ");
@@ -228,19 +232,38 @@ function Cpu() {
 				}
 				default:
 				{
+					if(this.tickSenseValidOpCode === 3)
+					{
+						if(!_Memory.memory[(this.PC + _PCB.base)] === "00")
+						{
+							_KernelInterruptQueue.enqueue( new Interrupt(INVALID_OPCODE_IRQ, 0) );
+						}
+					}
+					else
+					{
 						this.PC++;
+						_PCB.PCLoc = this.PC;
 						document.getElementById('PC').innerHTML=this.PC;
 						this.SeperationValidOpCode++;
+					}
 				}
 			}
 			this.PC++;
-			document.getElementById('PC').innerHTML=this.PC + _PCB.base;
+			_PCB.PCLoc = this.PC;
+			document.getElementById('PC').innerHTML=this.PC;
 		}
     };
 	
 	this.CPUScheduler = function()
 	{
-		if(this.QuantumSeperation >= _Quantum)
+		if(_CpuSchedule === "priority")
+		{
+			if(!this.isPriority)
+			{
+				_KernelInterruptQueue.enqueue( new Interrupt(PRIORITY_IRQ, 0) );
+			}
+		}
+		else if(this.QuantumSeperation >= _Quantum)
 		{
 			_KernelInterruptQueue.enqueue( new Interrupt(CONTEXTSWITCH_IRQ, 0) );
 		}
@@ -272,16 +295,28 @@ function Cpu() {
 		
 		if(_ReadyQueue.isEmpty())
 		{
+			_Memory.init();
 			this.isExecuting = false;
-			this.PC    = 0;
-			this.Acc   = 0;
-			this.Xreg  = 0;
-			this.Yreg  = 0;
-			this.Zflag = 0;
 		}
 		
 		_PCB = _ReadyQueue.dequeue();
-		if(_ReadyQueue.getSize() === 2)
+		if(_PCB.isOnDisk)
+		{
+			this.isExecuting = false;
+			_KernelInterruptQueue.enqueue( new Interrupt(SWAP_IRQ, temp) );
+		}
+		if(_ReadyQueue.getSize() === 3)
+		{
+			document.getElementById('RQ4').innerHTML=temp.toString();
+			var tempPCB3 = document.getElementById('RQ4').textContent;
+			var tempPCB2 = document.getElementById('RQ3').textContent;
+			var tempPCB1 = document.getElementById('RQ2').textContent;
+			document.getElementById('RQ1').innerHTML=tempPCB1;
+			document.getElementById('RQ2').innerHTML=tempPCB2;
+			document.getElementById('RQ3').innerHTML=tempPCB3;  
+			document.getElementById('RQ4').innerHTML="alpaca";  
+		}
+		else if(_ReadyQueue.getSize() === 2)
 		{
 			document.getElementById('RQ3').innerHTML=temp.toString();
 			var tempPCB2 = document.getElementById('RQ3').textContent;
@@ -289,6 +324,7 @@ function Cpu() {
 			document.getElementById('RQ2').innerHTML=tempPCB2;
 			document.getElementById('RQ1').innerHTML=tempPCB1;
 			document.getElementById('RQ3').innerHTML="Alpaca";
+			document.getElementById('RQ4').innerHTML="Alpaca"; 
 		}
 		else if (_ReadyQueue.getSize() === 1)
 		{
@@ -297,12 +333,14 @@ function Cpu() {
 			document.getElementById('RQ1').innerHTML=tempPCB1;
 			document.getElementById('RQ2').innerHTML="Alpaca";
 			document.getElementById('RQ3').innerHTML="Alpaca";
+			document.getElementById('RQ4').innerHTML="Alpaca"; 
 		}
 		else if(_ReadyQueue.getSize() === 0)
 		{
 			document.getElementById('RQ1').innerHTML="Alpaca";
 			document.getElementById('RQ2').innerHTML="Alpaca";
 			document.getElementById('RQ3').innerHTML="Alpaca";
+			document.getElementById('RQ4').innerHTML="Alpaca"; 
 		}
 		this.PC    = _PCB.PCLoc;
 		this.Acc   = _PCB.ACCVal;
@@ -316,9 +354,106 @@ function Cpu() {
 		document.getElementById('Z').innerHTML=this.Zflag;
 		this.QuantumSeperation = 0;		
 	};
+	this.FixPriority = function()
+	{
+	
+    var maxPriorityNum = _PCB一.priority;
+	var maxPriority = _PCB一;
+    var nextPriorityNum = _PCB二.priority;
+    var nextPriority = _PCB二;
+    var thirdNum = _PCB三.priority;
+    var thirdPriority = _PCB三;
+    if(maxPriorityNum < _PCB二.priority)
+    {
+		if(nextPriorityNum < maxPriorityNum)
+		{
+			if(thirdNum < nextPriorityNum)
+			{
+				thirdNum = nextPriorityNum;
+				thirdPriority = nextPriority;
+			}
+			nextPriorityNum = maxPriorityNum;
+			nextPriority = maxPriority;
+		}
+		maxPriorityNum = _PCB二.priority;
+		maxPriority = _PCB二;
+    }
+    else if(maxPriorityNum < _PCB三.prioritiy)
+    {
+		if(nextPriorityNum < maxPriorityNum)
+		{
+			if(thirdNum < nextPriorityNum)
+			{
+				thirdNum = nextPriorityNum;
+				thirdPriority = nextPriority;
+			}	
+			nextPriorityNum = maxPriorityNum;
+			nextPriority = maxPriority;
+		}
+		maxPriorityNum = _PCB三.priority;
+		maxPriority = _PCB三;
+	}
+    while(!_ReadyQueue.isEmpty)
+    {
+		_ReadyQueue.dequeue();
+    }
+    _ReadyQueue.enqueue(maxPriority);
+    _ReadyQueue.enqueue(nextPriority);
+    _ReadyQueue.enqueue(thirdPriority);
+}
 	this.InvalidOpCode = function()
 	{
 			_PCB.isDone = true;
 			_StdIn.putText("Check " + (this.PC + _PCB.base));						
 	};
+	this.Swap = function(temp)
+	{
+		_FileName = "~SwapFile";
+		_ToBePrinted = false;
+		var j = temp.base;
+		_ToBeWritten = "";
+		_StartingPoint = temp.base;
+		while (j <= temp.limit)
+		{
+			_ToBeWritten += _Memory.memory[j] + " ";
+			j++;
+		}
+		_ToBeRead = "";
+		_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 3) );
+		temp.isOnDisk = true;
+		_PCB.base = temp.base;
+		_PCB.limit = temp.limit;
+		_PCB.isOnDisk = false;
+	};
+	this.toRead = function()
+	{
+		j = _StartingPoint;
+		var toBeSwapped = "";
+		toBeSwapped = _ToBeRead.split(" ");
+		for(i = 0; i <= _BlockSize; i++)
+		{
+			_Memory.memory[j] = toBeSwapped[i];
+			document.getElementById(j).innerHTML=_Memory.memory[j];
+			j++;
+		}
+		_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 2) );
+	};
+	this.isDoneWriting = function()
+	{
+		this.PC    = _PCB.PCLoc;
+		this.Acc   = _PCB.ACCVal;
+		this.Xreg  = _PCB.XRegVal;
+		this.Yreg  = _PCB.YRegVal;
+		this.Zflag = _PCB.ZFlagVal;
+		document.getElementById('PC').innerHTML=this.PC + _PCB.base;
+		document.getElementById('ACC').innerHTML=this.Acc;
+		document.getElementById('X').innerHTML=this.Xreg.toString(16);
+		document.getElementById('Y').innerHTML=this.Yreg.toString(16);
+		document.getElementById('Z').innerHTML=this.Zflag;  
+		document.getElementById('RL1').innerHTML=_PCB一.toString();
+		document.getElementById('RL2').innerHTML=_PCB二.toString();
+		document.getElementById('RL3').innerHTML=_PCB三.toString();  
+		document.getElementById('RL4').innerHTML=_PCB四.toString();
+		this.isExecuting = true;  
+	}
 }

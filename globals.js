@@ -22,13 +22,19 @@ var KEYBOARD_IRQ = 1;
 
 var CONTEXTSWITCH_IRQ = 2;
 
-var INVALID_OPCODE_IRQ = 3;
-
+var INVALID_OPCODE_IRQ = 4;
+var PRIORITY_IRQ = 3;
+var INVALID_OPCODE_IRQ = 4;
+var FILE_SYSTEM_IRQ = 5;
+var SWAP_IRQ = 6;
+var _CanvasWidth = 500;
 
 //
 // Global Variables
 //
 var _CPU = null;
+
+var _Formatted = false;
 
 //Starting state for memory
 var _Memory = null;
@@ -37,9 +43,10 @@ var _ProgramCount = 0;
 
 //Program Control Blocks with Japanese because apparently that is valid code
 var _PCB = null;
-var _PCB一 = null;
-var _PCB二 = null;
-var _PCB三 = null;
+var _PCB一 = null; //一 = 1
+var _PCB二 = null; //二 = 2
+var _PCB三 = null; //三 = 3
+var _PCB四 = null; //四 = 4
 
 var _NumTimesRan = 0;
 var _MaxMemory = 768;
@@ -48,6 +55,20 @@ var _FirstBlock = 0;
 var _SecondBlock = 256;
 var _ThirdBlock = 512;
 var _Quantum = 6;
+var _QuantumBackup = _Quantum;
+var _CpuSchedule = "rr";
+
+var _MBR = "000";
+var _NumTracks = 4;
+var _NumSectors = 8;
+var _NumBlocks = 8;
+var _FSsize = 64;
+var _WritableChar = 59;
+var _FileName = "";
+var _ToBeWritten = "";
+var _ToBeRead = "";
+var _ToBePrinted = true;
+var _StartingPoint = 0;
 
 var _OSclock = 0;       // Page 23.
 
@@ -82,6 +103,7 @@ var _SarcasticMode = false;
 
 // Global Device Driver Objects - page 12
 var krnKeyboardDriver = null;
+var krnHardDriveDriver = null;
 
 // For testing...
 var _GLaDOS = null;

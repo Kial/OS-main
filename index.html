@@ -27,6 +27,7 @@
    <script type="text/javascript" src="scripts/os/shell.js"></script>
    <script type="text/javascript" src="scripts/os/kernel.js"></script>
    <script type="text/javascript" src="scripts/os/PCB.js"></script>
+   <script type="text/javascript" src="scripts/os/FileSystemDeviceDriver.js"></script>
 
    <!-- Other Routines -->
    <script type="text/javascript" src="scripts/utils.js"></script>
@@ -63,6 +64,14 @@
              value="Reset"
              tabindex="2"
              onclick="hostBtnReset_click(this);">
+	  <Input type="button"
+			id = "btnFiles"
+			name="btnFiles"
+			class="normal_button"
+			disabled="disabled"
+			value="Show FileSpace"
+			tabindex="3"
+			onclick="utilShowMe_click(this);">
    </div>
 
 	<div>
@@ -111,12 +120,14 @@
 		<th>Ready Queue</th>
 		<tr><td id = "RQ1">Alpaca</td></tr>
 		<tr><td id = "RQ2">Alpaca</td></tr>
-		<tr><td id = "RQ3">Alpaca</td></tr></table>
+		<tr><td id = "RQ3">Alpaca</td></tr>
+		<tr><td id = "RQ4">Alpaca</td></tr></table>
 		<table border = 1>
 		<th>Resident List</th>
 		<tr><td id = "RL1">Alpaca</td></tr>
 		<tr><td id = "RL2">Alpaca</td></tr>
-		<tr><td id = "RL3">Alpaca</td></tr></table>
+		<tr><td id = "RL3">Alpaca</td></tr>
+		<tr><td id = "RL4">Alpaca</td></tr></table>
 			<table border=1>
 		<tr>
 		<th>$000</th>

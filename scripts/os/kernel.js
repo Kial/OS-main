@@ -35,6 +35,13 @@ function krnBootstrap()      // Page 8.
    krnKeyboardDriver.driverEntry();                    // Call the driverEntry() initialization routine.
    krnTrace(krnKeyboardDriver.status);
 
+   
+   
+   // Load the File System Device Driver
+	krnTrace("Loading the Hard Drive device driver.");
+	krnHardDriveDriver = new FileSystemDeviceDriver();    // Construct it.  TODO: Should that have a _global-style name?
+	krnHardDriveDriver.driverEntry();                    // Call the driverEntry() initialization routine.
+	krnTrace(krnHardDriveDriver.status);
    //
    // ... more?
    //
@@ -133,8 +140,18 @@ function krnInterruptHandler(irq, params)    // This is the Interrupt Handler Ro
 		case CONTEXTSWITCH_IRQ:
 			_CPU.ContextSwitch();
 			break;
+	    case PRIORITY_IRQ:
+			_CPU.FixPriority();
+			break;
 		case INVALID_OPCODE_IRQ:
 			_CPU.InvalidOpCode();
+			break;
+	    case FILE_SYSTEM_IRQ:
+			krnHardDriveDriver.isr(params);
+			break;
+		case SWAP_IRQ:
+			_CPU.Swap(params);
+			break;
         default: 
             krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
     }
@@ -195,5 +212,6 @@ function krnTrapError(msg)
     img.onload = function(){
         _DrawingContext.drawImage(img, 0, 0, 500, 500);
     }
+	_CPU.isExecuting = false;
     krnShutdown();
 }

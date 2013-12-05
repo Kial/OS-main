@@ -22,7 +22,22 @@ function Time(){
     var time = new Date();
     document.getElementById('pTime').innerHTML=(time);
 }
-
+function utilShowMe_click(btn)
+{
+	var HDDInfo = "";
+	for(i = 0; i < _NumTracks; i++)
+	{
+		for(j = 0; j < _NumSectors; j++)
+		{
+			for(k = 0; k < _NumBlocks; k++)
+			{
+				var TSB = i.toString() + j.toString() + k.toString();
+				HDDInfo += TSB + ": " + localStorage[TSB] + "\n";
+			}
+		}
+	}
+	window.alert(HDDInfo);
+}
 function rot13(str) {   // An easy-to understand implementation of the famous and common Rot13 obfuscator.
                         // You can do this in three lines with a complex regular expression, but I'd have
     var retVal = "";    // trouble explaining it in the future.  There's a lot to be said for obvious code.

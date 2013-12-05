@@ -122,6 +122,13 @@ function shellInit() {
 	sc.function = shellQuantum;
 	this.commandList[this.commandList.length] = sc;
 	
+	// schedule [rr, fcfs, priority]
+	sc = new ShellCommand();
+	sc.command = "schedule";
+	sc.description = "- Set a Scheduling Algorithm";
+	sc.function = shellScheduler;
+	this.commandList[this.commandList.length] = sc;
+	
     // trace <on | off>
     sc = new ShellCommand();
     sc.command = "trace";
@@ -143,20 +150,61 @@ function shellInit() {
     sc.function = shellPrompt;
     this.commandList[this.commandList.length] = sc;
 
-    // processes - list the running processes and their IDs
+    // processes, list the running processes and their IDs
 	sc = new ShellCommand();
     sc.command = "processes";
-    sc.description = "displays a list of all running processes";
+    sc.description = "display all running processes";
     sc.function = shellProcesses;
     this.commandList[this.commandList.length] = sc;
 	
-    // kill <id> - kills the specified process id.
+    // kill <id> - kills the given pid.
 	sc = new ShellCommand();
     sc.command = "kill";
     sc.description = "Kills the PID";
     sc.function = shellKill;
     this.commandList[this.commandList.length] = sc;
+	
+	// format
+	sc = new ShellCommand();
+	sc.command = "format";
+	sc.description = "- Formats the Hard Drive";
+	sc.function = shellFormat;
+	this.commandList[this.commandList.length] = sc;
 
+	// create <String>
+	sc = new ShellCommand();
+	sc.command = "create";
+	sc.description = "- Makes a new file";
+	sc.function = shellCreate;
+	this.commandList[this.commandList.length] = sc;
+	
+	// read <String>
+	sc = new ShellCommand();
+	sc.command = "read";
+	sc.description = "- Read a file";
+	sc.function = shellRead;
+	this.commandList[this.commandList.length] = sc;
+
+	// write <String> <String>
+	sc = new ShellCommand();
+	sc.command = "write";
+	sc.description = "- Write to a file";
+	sc.function = shellWrite;
+	this.commandList[this.commandList.length] = sc;
+
+	// delete <String>
+	sc = new ShellCommand();
+	sc.command = "delete";
+	sc.description = "- Delete a file";
+	sc.function = shellDelete;
+	this.commandList[this.commandList.length] = sc;
+
+	// ls
+	sc = new ShellCommand();
+	sc.command = "ls"
+	sc.description = "- List all files"
+	sc.function = shellList;
+	this.commandList[this.commandList.length] = sc;
     //
     // Display the initial prompt.
     this.putPrompt();
@@ -227,7 +275,7 @@ function shellParseInput(buffer)
     buffer = trim(buffer);
 
     // 2. Lower-case it.
-    buffer = buffer.toLowerCase();
+   // buffer = buffer.toLowerCase();
 
     // 3. Separate on spaces so we can determine the command and command-line args, if any.
     var tempList = buffer.split(" ");
@@ -237,7 +285,7 @@ function shellParseInput(buffer)
     // 4.1 Remove any left-over spaces.
     cmd = trim(cmd);
     // 4.2 Record it in the return value.
-    retVal.command = cmd;
+    retVal.command = cmd.toLowerCase();;
 
     // 5. Now create the args array from what's left.
     for (var i in tempList)
@@ -353,68 +401,112 @@ function shellBSOD(args)
 
 function shellLoad(args)
 {
+	var priority = 100;
+	if (args.length === 1)
+    { 
+		priority = args[0];
+	}
 	//get the input from the input box
 	var programInput = document.getElementById("taProgramInput").value;
 	//check for anything that ISNT code and then move forward based on that
 	var regx =  /[g-z]/gi;
 	if(!regx.test(programInput))
 	{
-		//three or more programs already running means we cant handle this one
-		//theres a problem if it already was higher than 3
-		if(_ProgramCount >= 3)
+		//three or more programs already running means theres no space
+		if(_ProgramCount > 3)
 		{
 			_StdIn.putText("Not enough Memory");
 		}
 		else
 		{
-		//Check what block of memory to put the program in
-		//no current programs means it goes in block one
+		//Check what block of memory the program goes in
+		//nothing running means it goes in block one
 			if(_ProgramCount === 0)
 			{
 				var i = _FirstBlock;
 				_PCB一 = new PCB;
-				_PCB一.init(_ProgramCount);
+				_PCB一.init(_ProgramCount, priority);
 				document.getElementById("RL1").innerHTML=_PCB一.toString();
 				_ResidentList.push(_PCB一.toString());
 			}
-			//a current program means it goes to block two
+			//one running program means it goes to block two
 			else if(_ProgramCount === 1)
 			{
 				var i = _SecondBlock;
 				_PCB二 = new PCB;
-				_PCB二.init(_ProgramCount);
+				_PCB二.init(_ProgramCount, priority);
 				document.getElementById("RL2").innerHTML=_PCB二.toString();
 				_ResidentList.push(_PCB二.toString());
 			}
-			//two current programs means it goes to block three
-			else
+			//two running programs puts it in block three
+			else if(_ProgramCount === 2)
 			{
 				var i = _ThirdBlock;
 				_PCB三 = new PCB;
-				_PCB三.init(_ProgramCount);
+				_PCB三.init(_ProgramCount, priority);
 				document.getElementById("RL3").innerHTML=_PCB三.toString();
 				_ResidentList.push(_PCB三.toString());
 			}
-			
+			else if(_ProgramCount === 3)
+			{
+				var i = -1;
+				_PCB四 = new PCB;
+				_PCB四.init(_ProgramCount, priority);
+				document.getElementById("RL4").innerHTML=_PCB四.toString();
+				_ResidentList.push(_PCB四.toString());
+				_ProgramCount = 0;
+			}
 			//Go through the program and add it to memory
 			var toBeEntered = programInput.split(" ");
 			var j = 0;
-			while (j < toBeEntered.length)
+			if(i !== -1)
 			{
-				_Memory.memory[i] = toBeEntered[j];
-				document.getElementById(i).innerHTML=_Memory.memory[i];
-				j++;
-				i++;
+				while (j < toBeEntered.length)
+				{
+					_Memory.memory[i] = toBeEntered[j];
+					document.getElementById(i).innerHTML=_Memory.memory[i];
+					j++;
+					i++;
+				}
+				_StdIn.putText("PID: " + _ProgramCount++);
 			}
-			_StdIn.putText("PID: " + _ProgramCount++);
+			else
+			{
+				if(!_Formatted)
+				{
+					_ToBePrinted = false;
+					shellFormat();
+					_StdIn.putText("Formatted the disk");
+					_StdIn.advanceLine();
+				}
+				_StdIn.putText("Wasn't enough memory");
+				_StdIn.advanceLine();
+				_FileName = "~SwapFile";
+				_ToBeWritten = "";
+				_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 1) );
+				while (j < _BlockSize)
+				{
+					if(toBeEntered[j])
+					{
+						_ToBeWritten += toBeEntered[j] + " ";
+						j++;
+					}
+					else
+					{
+						_ToBeWritten += "00 ";
+						j++;
+					}
+				}
+				_FileName = "~SwapFile";
+				_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 2) );
+				
+			}
 		}
 	}
-	else
-	{
-		_StdIn.putText("Not Code");
+	else{
+	_StdIn.putText("Not Code");
 	}
 }
-
 function shellDate(args)
 {
 	_StdIn.putText(Date());
@@ -437,26 +529,22 @@ function shellRun(args)
 		if(args[0] === "0")
 		{
 			_CPU.PC = _FirstBlock;
-			_PCB一.isDone = false;
+			_CPU.Scheduler(_PCB一);
 			document.getElementById("PC").innerHTML=_CPU.PC;
-			if(_ReadyQueue.isEmpty())
-			{
-				_RunCounter = 0;
-			}
-			if(_RunCounter === 0)
+			if(_NumTimesRan === 0)
 			{
 				document.getElementById("RQ1").innerHTML=_PCB一.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
-			else if(_RunCounter === 1)
+			if(_NumTimesRan === 1)
 			{
 				document.getElementById("RQ2").innerHTML=_PCB一.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
-			else if(_RunCounter === 2)
+			else if(_NumTimesRan === 2)
 			{
 				document.getElementById("RQ3").innerHTML=_PCB一.toString();
-				_RunCounter = 0;
+				_NumTimesRan++;
 			}
 			_CPU.Scheduler(_PCB一);
 			_CPU.isExecuting = true;
@@ -465,22 +553,21 @@ function shellRun(args)
 		{
 			_CPU.PC = _SecondBlock;
 			_CPU.Scheduler(_PCB二);
-			_PCB二.isDone = false;
 			document.getElementById("PC").innerHTML=_CPU.PC;
-			if(_RunCounter === 0)
+			if(_NumTimesRan === 0)
 			{
 				document.getElementById("RQ1").innerHTML=_PCB二.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
-			else if(_RunCounter === 1)
+			else if(_NumTimesRan === 1)
 			{
 				document.getElementById("RQ2").innerHTML=_PCB二.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
-			else if(_RunCounter === 2)
+			else if(_NumTimesRan === 2)
 			{
 				document.getElementById("RQ3").innerHTML=_PCB二.toString();
-				_RunCounter = 0;
+				_NumTimesRan = 0;
 			}
 			_CPU.isExecuting = true;
 		}
@@ -488,22 +575,21 @@ function shellRun(args)
 		{
 				_CPU.pc = _ThirdBlock;
 				_CPU.Scheduler(_PCB三);
-				_PCB三.isDone = false;
 				document.getElementById("PC").innerHTML=_CPU.PC;
-			if(_RunCounter === 0)
+			if(_NumTimesRan === 0)
 			{
 				document.getElementById("RQ1").innerHTML=_PCB三.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
-			else if(_RunCounter === 1)
+			else if(_NumTimesRan === 1)
 			{
 				document.getElementById("RQ2").innerHTML=_PCB三.toString();
-				_RunCounter++;
+				_NumTimesRan++;
 			}
 			else if(this.numTimesRan === 2)
 			{
 				document.getElementById("RQ3").innerHTML=_PCB三.toString();
-				_RunCounter = 0;
+				_NumTimesRan = 0;
 			}
 				_CPU.isExecuting = true;
 		}
@@ -522,21 +608,23 @@ function shellRunAll(args)
 {
 	_CPU.PC = _FirstBlock;
 	_CPU.Scheduler(_PCB一);
-	_PCB一.isDone = false;
 	_CPU.isExecuting = true;
 	document.getElementById("PC").innerHTML=_CPU.PC;
 	document.getElementById("RQ1").innerHTML=_PCB一.toString();
 	if(_PCB二 != null)
 	{
 		_CPU.Scheduler(_PCB二);
-		_PCB二.isDone = false;
 		document.getElementById("RQ2").innerHTML=_PCB二.toString();
 	}
 	if(_PCB三 != null)
 	{
 		_CPU.Scheduler(_PCB三);
-		_PCB三.isDone = false;
 		document.getElementById("RQ3").innerHTML=_PCB三.toString();
+	}
+	if(_PCB四 != null)
+	{
+		_CPU.Scheduler(_PCB四);
+		document.getElementById("RQ4").innerHTML=_PCB四.toString();
 	}
 };
 
@@ -544,7 +632,15 @@ function shellQuantum(args)
 {
 	if (args.length > 0)
 	{
-		_Quantum = args[0];
+		if(_CpuSchedule === "fcfs" || _CpuSchedule === "priority")
+		{
+			_QuantumBackUp = args[0];
+		}
+		else
+		{
+			_Quantum = args[0];
+			_QuantumBackUp = _Quantum;
+		}
 	}
 	else
 	{
@@ -655,6 +751,147 @@ function shellPrompt(args)
         _StdIn.putText("Usage: prompt <string>  Please supply a string.");
     }
 }
+function shellFormat(args)
+{
+	_Formatted = true;
+	_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 0) );  
+	if(_ToBePrinted)
+	{
+		_StdIn.putText("Done");
+		_StdIn.advanceLine();
+	}
+	else
+	{
+		_ToBePrinted = true;
+	}
+}
+
+function shellCreate(args)
+{
+	if(_Formatted)
+	{
+		if (args.length === 0)
+		{
+			_StdIn.putText("Enter a Name");
+		}
+		var tempName = args[0];
+		var nameValidator =  /\W/gi;
+		if(tempName.length < 8 && !nameValidator.test(tempName))
+		{
+			_FileName = "";
+			_FileName = tempName.toLowerCase().trim();
+			_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 1) );  
+			_StdIn.putText("Created File Named: " + _FileName);
+			_StdIn.advanceLine();
+		}
+		else
+		{
+			_StdIn.putText("Only a string of letters less than 8 characters");
+		}
+	}
+	else
+	{
+			_StdIn.putText("Format first");
+    }
+}
+function shellWrite(args)
+{
+	if(_Formatted)
+	{
+		if (args.length <= 1)
+		{
+			_StdIn.putText("File?");	
+		}
+		else
+		{
+			var tempName = args[0];
+			var nameValidator =  /\W/gi;
+			_ToBeWritten = "";
+			for(i = 1; i < args.length; i++)
+			{
+				_ToBeWritten += args[i] + " ";
+			}
+			if(tempName.length < 8 && !nameValidator.test(tempName))
+			{
+				_FileName = tempName.toLowerCase().trim();
+				_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 2) ); 
+				_StdIn.putText("Writing to file");
+				_StdIn.advanceLine();        
+			}
+			else
+			{
+				_StdIn.putText("Less then 8 characters");
+			}
+		}
+	}
+	else
+	{
+		_StdIn.putText("Format first");
+	}
+}
+
+function shellRead(args)
+{
+	if(_Formatted)
+	{
+		var tempName = args[0];
+		var nameValidator =  /\W/gi;
+		_ToBeRead = "";
+		if(tempName.length < 8 && !nameValidator.test(tempName))
+		{
+			_FileName = tempName.toLowerCase().trim();
+			_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 3) ); 
+			for(i = 0; i < _ToBeRead.length; i++)
+			{
+				_StdIn.putText(_ToBeRead[i]);
+			}
+		}
+		else
+		{
+			_StdIn.putText("Only a string less then 8 characters");
+		}
+	}
+	else
+    {
+		_StdIn.putText("Format first");
+    }
+}
+
+function shellDelete(args)
+{
+	if(_Formatted)
+	{
+		var tempName = args[0];
+		var nameValidator =  /\W/gi;
+		if(tempName.length < 8 && !nameValidator.test(tempName))
+		{
+			_FileName = tempName.toLowerCase().trim();
+			_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 4) ); 
+			_StdIn.putText("Deleted?");
+			_StdIn.advanceLine();
+		}
+		else
+		{
+			_StdIn.putText("Only include letters less then 8 characters");
+		}
+	}
+	else
+    {
+		_StdIn.putText("Format first");
+    }
+}
+
+function shellList(args)
+{
+	if(_Formatted)
+	{
+		_KernelInterruptQueue.enqueue( new Interrupt(FILE_SYSTEM_IRQ, 5) );
+	}
+	else
+	{
+		_StdIn.putText("Format first");
+	}
+}
 
 function shellProcesses(args)
 {
@@ -677,6 +914,11 @@ function shellProcesses(args)
 		if(!_PCB三.isDone)
 		{
 			_StdIn.putText(_PCB三.toString());
+			_StdIn.advanceLine();
+		}
+		if(!_PCB四.isDone)
+		{
+			_StdIn.putText(_PCB四.toString());
 			_StdIn.advanceLine();
 		}
 	}
@@ -703,6 +945,10 @@ function shellKill(args)
 		{
 			_PCB三.isDone = true;
 		}
+		else if(args[0] === "3")
+		{
+			_PCB四.isDone = true;
+		}
 		else
 		{
 			_StdIn.putText("Nothing to Kill");
@@ -712,4 +958,31 @@ function shellKill(args)
 	{
 			_StdIn.putText("Nothing to Kill");
 	}
+}
+function shellScheduler(args)
+{
+	if (args.length > 0)
+	{
+		if(args[0].toLowerCase() === "fcfs" && _CpuSchedule !== "fcfs")
+		{
+			_QuantumBackup = _Quantum;
+			_Quantum = 1000000;
+			_StdIn.putText("First Come First Serve");
+		}
+		else if(args[0].toLowerCase() === "rr" && _CpuSchedule !== "rr")
+		{
+			_Quantum = _QuantumBackup;
+			_StdIn.putText("Round Robin");
+		}
+		else if(args[0].toLowerCase() === "priority" && _CpuSchedule !== "priority")
+		{
+			_QuantumBackup = _Quantum;
+			_Quantum = 1000000;
+			_StdIn.putText("Priority");
+		}
+	}
+    else
+    {
+		_StdIn.putText("What method?");
+    }
 }
